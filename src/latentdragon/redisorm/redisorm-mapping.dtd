@@ -1,0 +1,14 @@
+<!ELEMENT redisorm-mapping (class+)>
+
+<!ELEMENT class (id,property*)>
+<!ELEMENT class name CDATA #REQUIRED>
+
+<!ELEMENT id EMPTY>
+<!ATTLIST id name CDATA #REQUIRED>
+<!ATTLIST id redis-name #REQUIRED>
+<!ATTLIST id raw-type CDATA #REQUIRED>
+
+<!ELEMENT property EMPTY>
+<!ATTLIST property name CDATA #REQUIRED>
+<!ATTLIST property redis-name CDATA #REQUIRED "same">
+<!ATTLIST property raw-type CDATA ("string"|"integer"|"long"|"float"|"double"|"date")>

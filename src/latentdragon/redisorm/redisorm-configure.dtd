@@ -1,0 +1,19 @@
+<!ELEMENT redisorm-configuration (session-factory)>
+
+<!ELEMENT session-factory (properties+,mappings*)>
+<!ELEMENT properties (property+)>
+<!ELEMENT mappings (mapping+)>
+
+<!ELEMENT property (#PCDATA)>
+<!ATTLIST property name CDATA
+        ("host"|"port"|"username"|"passowrd"|
+        "pool_size"|"timeout"|"fetch_size"|"batch-size"|
+        "useUnicode"|"characterEncoding"|"autoCommit"|"deamonize"|
+        "logLevel"|"logFile"|"databaseNum"|"compression"|
+        "dbfilename"|"maxClients"|"maxMemory"|"vm-enable"|
+        "activerehashing")
+        (#REQUIRED)>
+
+<!ELEMENT mapping EMPTY>
+<!ATTLIST mapping resource #REQUIRED>
+
