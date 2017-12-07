@@ -104,6 +104,7 @@ public class ConfigurationXMLParser {
                     default:
                         throw new RedisormException("Invalid property name!");
                 }
+                configuration.setMappingMap(getMappings(filePath));
                 return configuration;
             }
         } catch (SAXException e) {

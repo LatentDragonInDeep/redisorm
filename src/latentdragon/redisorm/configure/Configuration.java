@@ -1,5 +1,10 @@
 package latentdragon.redisorm.configure;
 
+import latentdragon.redisorm.RedisormException;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by chenshaojie on 2017/12/6,19:50.
  */
@@ -17,6 +22,21 @@ public class Configuration {
     private boolean daemonize = false;
     private String logLevel;
     private int databaseNum = 16;
+
+    private Map<String,Mapping> mappingMap;
+
+    public Mapping getMapping(Class clazz) {
+        String className = clazz.getName();
+        if(!mappingMap.containsKey(className)) {
+            throw new RedisormException("class have not be mapped!");
+        }
+
+        return mappingMap.get(className);
+    }
+
+    public void setMappingMap (Map<String, Mapping> mappingMap) {
+        this.mappingMap = mappingMap;
+    }
 
     public static Configuration configure(String filePath) {
         return ConfigurationXMLParser.parseXMLConfiguration(filePath);
