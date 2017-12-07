@@ -51,6 +51,10 @@ public class Mapping {
         columnToField.put(column,field);
     }
 
+    public boolean existField(String fieldName) {
+        return fieldToColumn.containsKey(fieldName);
+    }
+
     public String getNameFiled(String column) {
         return columnToField.get(column);
     }

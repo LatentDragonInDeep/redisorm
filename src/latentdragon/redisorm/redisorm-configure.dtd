@@ -2,7 +2,7 @@
 
 <!ELEMENT session-factory (properties+,mappings*)>
 <!ELEMENT properties (property+)>
-<!ELEMENT mappings (mapping+)>
+<!ELEMENT mappings (mapping-xml*,mapping-annotation*)>
 
 <!ELEMENT property (#PCDATA)>
 <!ATTLIST property name CDATA
@@ -14,6 +14,9 @@
         "activerehashing")
         (#REQUIRED)>
 
-<!ELEMENT mapping EMPTY>
-<!ATTLIST mapping resource #REQUIRED>
+<!ELEMENT mapping-xml EMPTY>
+<!ATTLIST mapping-xml resource CDATA #REQUIRED>
+
+<!ELEMENT mapping-annotation EMPTY>
+<!ATTLIST mapping-annotation class CDATA #REQUIRED>
 

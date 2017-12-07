@@ -28,7 +28,8 @@
         </properties>
 
         <mappings>
-            <mapping resource=" "/>
+            <mapping-xml resource=""/>
+            <mapping-annotation class=""/>
         </mappings>
     </session-factory>
 </redisorm-configuration>

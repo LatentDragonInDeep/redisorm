@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact name="Redisorm:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/redisorm.jar</output-path>
+    <root id="root">
+      <element id="archive" name="Redisorm.jar">
+        <element id="module-output" name="Redisorm" />
+      </element>
+    </root>
+  </artifact>
+</component>

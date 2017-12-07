@@ -1,6 +1,10 @@
 package latentdragon.redisorm.configure;
 
 import latentdragon.redisorm.RedisormException;
+import latentdragon.redisorm.annotation.Column;
+import latentdragon.redisorm.annotation.Id;
+import latentdragon.redisorm.annotation.Table;
+import latentdragon.redisorm.annotation.Transient;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -11,6 +15,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +37,9 @@ public class ConfigurationXMLParser {
     private static final String ID = "id";
     private static final String RAW_TYPE = "raw_type";
     private static final String REDIS_NAME = "redis-name";
+
+    private static final String MAPPING_XML = "mapping-xml";
+    private static final String MAPPING_ANNOTATION = "mapping-annotation";
 
     private enum ConfigurationType {
         HOST,
@@ -124,8 +133,15 @@ public class ConfigurationXMLParser {
             Node sessionFactory = root.getElementsByTagName(SESSION_FACTORY).item(0);
             NodeList mappings = sessionFactory.getChildNodes().item(1).getChildNodes();
             for (int i = 0; i < mappings.getLength(); i++) {
-                String mappingFile = mappings.item(i).getAttributes().getNamedItem(RESOURCE).getNodeValue();
-                parseMapping(mappingFile,mappingMap);
+                Node mapping = mappings.item(i);
+                if(mapping.getNodeName().equals(MAPPING_XML)) {
+                    String mappingFile = mapping.getAttributes().getNamedItem(RESOURCE).getNodeValue();
+                    parseMappingByXML(mappingFile, mappingMap);
+                }
+                else if(mapping.getNodeName().equals(MAPPING_ANNOTATION)) {
+                    String className = mapping.getAttributes().getNamedItem(CLASS).getNodeValue();
+                    parseMappingByAnnotation(className,mappingMap);
+                }
             }
             return mappingMap;
         }
@@ -138,7 +154,7 @@ public class ConfigurationXMLParser {
         return null;
     }
 
-    private static void parseMapping(String filePath,Map<String,Mapping> result){
+    private static void parseMappingByXML(String filePath, Map<String,Mapping> result){
         try {
             Document document = builder.parse(new File(filePath));
             Element root = document.getDocumentElement();
@@ -176,6 +192,39 @@ public class ConfigurationXMLParser {
         catch (SAXException e) {
 
         }
+    }
+
+    private static void parseMappingByAnnotation(String className,Map<String,Mapping> result) {
+        Mapping mapping = new Mapping(className);
+        try {
+            Class clazz = Class.forName(className);
+            if(!clazz.isAnnotationPresent(Table.class)) {
+                throw new RedisormException("Entity type must have @Table annotation!");
+            }
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field:fields) {
+                if(field.isAnnotationPresent(Transient.class)) {
+                    continue;
+                }
+                if(field.isAnnotationPresent(Id.class)) {
+                    mapping.setIdName(field.getName());
+                    if(!field.isAnnotationPresent(Column.class)) {
+                        throw new RedisormException("field must have @Column Annotation!");
+                    }
+                    mapping.addNameFiled(field.getName(),field.getAnnotation(Column.class).name());
+                    continue;
+                }
+                if(!field.isAnnotationPresent(Column.class)) {
+                    throw new RedisormException("field must have @Column Annotation!");
+                }
+                mapping.addNameFiled(field.getName(),field.getAnnotation(Column.class).name());
+            }
+            mapping.build();
+            result.put(className,mapping);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

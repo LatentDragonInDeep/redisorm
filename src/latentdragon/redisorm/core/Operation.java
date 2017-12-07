@@ -5,6 +5,8 @@ import latentdragon.redisorm.configure.Mapping;
 import redis.clients.jedis.Jedis;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +15,9 @@ import java.util.Map;
  * Created by chenshaojie on 2017/12/7,15:17.
  */
 public class Operation {
+
+    private static final String SET="set";
+    private static final String GET="get";
 
     public enum OperationType {
         SAVE,
@@ -36,6 +41,17 @@ public class Operation {
         }
     }
 
+    private static String firstAlphaToUpperCase(String name) {
+        char firstAlpha = name.charAt(0);
+        if(firstAlpha<'a'||firstAlpha>'z') {
+            throw new RedisormException("the field must be named by English and CamelCase");
+        }
+        char[] cs=name.toCharArray();
+        cs[0]-=32;
+        return String.valueOf(cs);
+
+    }
+
     public Object query(Jedis jedis) {
         Map<String,String> map = jedis.hgetAll(key);
         return mapToObject(map,mapping,className);
@@ -52,15 +68,25 @@ public class Operation {
             for (Field field : fields) {
                 field.setAccessible(true);
                 String fieldName = field.getName();
+                if(!mapping.existField(fieldName)) {
+                    continue;
+                }
                 String columnName = mapping.getNameColumn(fieldName);
-                map.put(columnName,field.get(o).toString());
+                String methodName = GET+firstAlphaToUpperCase(fieldName);
+                Method method = clazz.getDeclaredMethod(methodName);
+                map.put(columnName,method.invoke(o).toString());
             }
         }
         catch (NoSuchFieldException e) {
-
         }
         catch (IllegalAccessException e) {
 
+        }
+        catch (NoSuchMethodException e) {
+            throw new RedisormException(e.getMessage()+"the field must have setter!");
+        }
+        catch (InvocationTargetException e) {
+            e.printStackTrace();
         }
 
         return middleState;
@@ -77,24 +103,26 @@ public class Operation {
                 Field field = clazz.getField(fieldName);
                 field.setAccessible(true);
                 String fieldType = field.getType().getName();
+                String methodName = SET+fieldName;
+                Method method = clazz.getDeclaredMethod(methodName);
                 switch (fieldType) {
                     case "java.lang.Integer":
-                        field.set(o,Integer.parseInt(value));
+                        method.invoke(o,Integer.parseInt(value));
                         break;
                     case "java.lang.Long":
-                        field.set(o,Long.parseLong(value));
+                        method.invoke(o,Long.parseLong(value));
                         break;
                     case "java.lang.Float":
-                        field.set(o,Float.parseFloat(value));
+                        method.invoke(o,Float.parseFloat(value));
                         break;
                     case "java.lang.Double":
-                        field.set(o,Double.parseDouble(value));
+                        method.invoke(o,Double.parseDouble(value));
                         break;
                     case "java.lang.String":
-                        field.set(o,value);
+                        method.invoke(o,value);
                         break;
                     case "java.util.Date":
-                        field.set(o, Date.parse(value));
+                        method.invoke(o,Date.parse(value));
                         break;
                     default:
                         throw new RedisormException("Invalid data type!");
@@ -113,6 +141,12 @@ public class Operation {
             throw new RedisormException("the constructor may be private");
         }
         catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        catch (NoSuchMethodException e) {
+            throw new RedisormException(e.getMessage()+"the field must have getter");
+        }
+        catch (InvocationTargetException e) {
             e.printStackTrace();
         }
 
