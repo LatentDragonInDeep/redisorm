@@ -34,7 +34,7 @@ public class Session implements Closeable{
          if(current!=null) {
              throw new RedisormException("the last transaction have not be commited!");
          }
-         current = new Transaction();
+         current = new Transaction(this);
          return current;
     }
 
@@ -103,7 +103,6 @@ public class Session implements Closeable{
     }
 
     public Object get(Object key,Class clazz) {
-        checkTransaction();
         Operation operation = new Operation();
         String className = clazz.getName();
         operation.setClassName(className);

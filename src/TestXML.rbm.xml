@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--<!DOCTYPE redisorm-mapping SYSTEM "http://redisorm.org/dtd/redisorm-mapping.dtd">-->
+<redisorm-mapping>
+    <class name="TestXML">
+        <id name="intData" redis-name="int"/>
+        <column name="longData" redis-name="long"/>
+        <column name="floatData" redis-name="float"/>
+        <column name="doubleData" redis-name="double"/>
+        <column name="stringData" redis-name="string"/>
+        <column name="dateData" redis-name="date"/>
+    </class>
+</redisorm-mapping>

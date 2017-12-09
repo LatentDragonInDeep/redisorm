@@ -1,14 +1,13 @@
-<!ELEMENT redisorm-mapping (class+)>
+<!DOCTYPE configuration PUBLIC "-//redisorm.org//DTD Config 3.0//EN" "http://redisorm.org/dtd/redisorm-mapping.dtd">
+        <!ELEMENT redisorm-mapping (class+)>
 
-<!ELEMENT class (id,property*)>
+<!ELEMENT class (id,column*)>
 <!ATTLIST class name CDATA #REQUIRED>
 
 <!ELEMENT id EMPTY>
 <!ATTLIST id name CDATA #REQUIRED>
 <!ATTLIST id redis-name #REQUIRED>
-<!ATTLIST id raw-type CDATA #REQUIRED>
 
-<!ELEMENT property EMPTY>
-<!ATTLIST property name CDATA #REQUIRED>
-<!ATTLIST property redis-name CDATA #REQUIRED "same">
-<!ATTLIST property raw-type CDATA ("string"|"integer"|"long"|"float"|"double"|"date")>
+<!ELEMENT column EMPTY>
+<!ATTLIST column name CDATA #REQUIRED>
+<!ATTLIST column redis-name CDATA #REQUIRED "same">

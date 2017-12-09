@@ -46,7 +46,7 @@ public class Mapping {
         valueMap.put(field,type);
     }
 
-    public void addNameFiled(String field,String column) {
+    public void addNameField (String field, String column) {
         fieldToColumn.put(field,column);
         columnToField.put(column,field);
     }
@@ -55,7 +55,7 @@ public class Mapping {
         return fieldToColumn.containsKey(fieldName);
     }
 
-    public String getNameFiled(String column) {
+    public String getNameField (String column) {
         return columnToField.get(column);
     }
 
@@ -68,21 +68,21 @@ public class Mapping {
             Class clazz = Class.forName(fullQualifiedClassName);
             for (Map.Entry<String,String> entry: fieldToColumn.entrySet()) {
                 String field = entry.getKey();
-                Field realField = clazz.getField(field);
+                Field realField = clazz.getDeclaredField(field);
                 realField.setAccessible(true);
                 Class fieldType = realField.getType();
                 String fieldTypeName = fieldType.getTypeName();
                 switch (fieldTypeName) {
-                    case "java.lang.Integer":
+                    case "int":
                         addValueField(field,ValueType.INTEGER);
                         break;
-                    case "java.lang.Long":
+                    case "long":
                         addValueField(field,ValueType.LONG);
                         break;
-                    case "java.lang.Float":
+                    case "float":
                         addValueField(field,ValueType.FLOAT);
                         break;
-                    case "java.lang.Double":
+                    case "double":
                         addValueField(field,ValueType.DOUBLE);
                         break;
                     case "java.lang.String":
@@ -97,10 +97,10 @@ public class Mapping {
             }
         }
         catch (ClassNotFoundException e) {
-        e.printStackTrace();
+            e.printStackTrace();
         }
         catch (NoSuchFieldException e) {
-
+            e.printStackTrace();
         }
     }
 }

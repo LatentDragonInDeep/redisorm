@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE redisorm-configuration SYSTEM "redisorm-configure.dtd">
+<!--<!DOCTYPE redisorm-configuration SYSTEM "http://redisorm.org/dtd/redisorm-configure.dtd">-->
 <redisorm-configuration>
     <session-factory>
         <properties>
             <!--设置数据库的连接url-->
             <property name="host">localhost</property>
             <!--设置数据库的端口号-->
-            <property name="port">port</property>
+            <property name="port">6379</property>
             <!--连接数据库的用户名-->
             <property name="username">root</property>
             <!--连接数据库是密码-->
@@ -15,21 +15,10 @@
             <property name="pool_size">20</property>
             <!--超时时间-->
             <property name="timeout">1000</property>
-            <!--fetch_size是指redisorm每次从数据库中取出的记录条数。Fetch Size设的越大，读数据库的次数越少，速度越快，Fetch Size越小，读数据库的次数越多，速度越慢-->
-            <property name="fetch_size">50</property>
-            <!--batch_size是指redisorm批量插入,删除和更新时每次操作的记录数。Batch Size越大，批量操作的向数据库发送Sql的次数越少，速度就越快，同样耗用内存就越大-->
-            <property name="batch_size">23</property>
-            <!--useUnicode连接数据库时是否使用Unicode编码-->
-            <property name="useUnicode">true</property>
-            <!--connection.characterEncoding连接数据库时数据的传输字符集编码方式，最好设置为gbk，用gb2312有的字符不全-->
-            <property name="characterEncoding">utf-8</property>
-            <!--是否自动提交操作-->
-            <property name="autocommit">true</property>
         </properties>
-
         <mappings>
-            <mapping-xml resource=""/>
-            <mapping-annotation class=""/>
+            <mapping-xml resource="TestXML.rbm.xml"/>
+            <mapping-annotation class="TestAnnotation"/>
         </mappings>
     </session-factory>
 </redisorm-configuration>

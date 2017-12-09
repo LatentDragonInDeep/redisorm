@@ -15,7 +15,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +40,8 @@ public class ConfigurationXMLParser {
     private static final String MAPPING_XML = "mapping-xml";
     private static final String MAPPING_ANNOTATION = "mapping-annotation";
 
+    private static final String COLUMN="column";
+
     private enum ConfigurationType {
         HOST,
         PORT,
@@ -63,20 +64,23 @@ public class ConfigurationXMLParser {
         }
     }
 
-    public static Configuration parseXMLConfiguration(String filePath) {
-        Configuration configuration = new Configuration();
+    public static Configuration parseXMLConfiguration(String filePath,Configuration configuration) {
         try {
-            Document document = builder.parse(new File(filePath));
+            String confFile = ConfigurationXMLParser.class.getClassLoader().getResource(filePath).getFile();
+            Document document = builder.parse(new File(confFile));
             Element root = document.getDocumentElement();
             if(!root.getTagName().equals(ROOT_TAG)) {
                 throw new RedisormException("root element invalid!");
             }
             Node sessionFactory = root.getElementsByTagName(SESSION_FACTORY).item(0);
-            NodeList properties = sessionFactory.getChildNodes().item(0).getChildNodes();
+            NodeList properties = sessionFactory.getChildNodes().item(1).getChildNodes();
             for (int i = 0; i < properties.getLength(); i++) {
                 Node property = properties.item(i);
+                if(!property.getNodeName().equals(PROPERTY)) {
+                    continue;
+                }
                 String content=property.getTextContent();
-                switch (ConfigurationType.valueOf(property.getNodeName())) {
+                switch (ConfigurationType.valueOf(property.getAttributes().getNamedItem(PROPERTY_ATTR).getNodeValue().toUpperCase())) {
                     case HOST:
                         configuration.setHost(content);
                         break;
@@ -113,13 +117,16 @@ public class ConfigurationXMLParser {
                     default:
                         throw new RedisormException("Invalid property name!");
                 }
-                configuration.setMappingMap(getMappings(filePath));
-                return configuration;
             }
+            configuration.setMappingMap(getMappings(confFile));
+            return configuration;
         } catch (SAXException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        catch (NumberFormatException e) {
+            throw new RedisormException("the number must be correct format!");
         }
         return null;
     }
@@ -131,7 +138,7 @@ public class ConfigurationXMLParser {
             Document document = builder.parse(filePath);
             Element root = document.getDocumentElement();
             Node sessionFactory = root.getElementsByTagName(SESSION_FACTORY).item(0);
-            NodeList mappings = sessionFactory.getChildNodes().item(1).getChildNodes();
+            NodeList mappings = sessionFactory.getChildNodes().item(3).getChildNodes();
             for (int i = 0; i < mappings.getLength(); i++) {
                 Node mapping = mappings.item(i);
                 if(mapping.getNodeName().equals(MAPPING_XML)) {
@@ -149,14 +156,15 @@ public class ConfigurationXMLParser {
 
         }
         catch (SAXException e) {
-
+            e.printStackTrace();
         }
         return null;
     }
 
     private static void parseMappingByXML(String filePath, Map<String,Mapping> result){
         try {
-            Document document = builder.parse(new File(filePath));
+            String confFile = ConfigurationXMLParser.class.getClassLoader().getResource(filePath).getFile();
+            Document document = builder.parse(new File(confFile));
             Element root = document.getDocumentElement();
             if(!root.getTagName().equals(ROOT_TAG_MAPPING)) {
                 throw new RedisormException("Invalid root element!");
@@ -165,22 +173,29 @@ public class ConfigurationXMLParser {
             for (int i = 0; i < classes.getLength(); i++) {
 
                 Node clazz = classes.item(i);
+                if(!clazz.getNodeName().equals(CLASS)) {
+                    continue;
+                }
                 String fullQualifiedName = clazz.getAttributes().getNamedItem(PROPERTY_ATTR).getNodeValue();
                 Mapping mapping = new Mapping(fullQualifiedName);
                 NodeList columns = clazz.getChildNodes();
-                if(!columns.item(0).getNodeName().equals(ID)) {
+                if(!columns.item(1).getNodeName().equals(ID)) {
                     throw new RedisormException("must have a id tag and the tag must be first!");
                 }
-                NamedNodeMap idAttrs = columns.item(0).getAttributes();
+                NamedNodeMap idAttrs = columns.item(1).getAttributes();
                 String idName = idAttrs.getNamedItem(PROPERTY_ATTR).getNodeValue();
                 String idRedisName = idAttrs.getNamedItem(REDIS_NAME).getNodeValue();
                 mapping.setIdName(idName);
-                mapping.addNameFiled(idName,idRedisName);
-                for (int j = 1; j < columns.getLength(); j++) {
-                    NamedNodeMap columnAttrs = columns.item(i).getAttributes();
+                mapping.addNameField(idName,idRedisName);
+                for (int j =0; j < columns.getLength(); j++) {
+                    Node column = columns.item(j);
+                    if(!column.getNodeName().equals(COLUMN)) {
+                        continue;
+                    }
+                    NamedNodeMap columnAttrs = column.getAttributes();
                     String columnName = columnAttrs.getNamedItem(PROPERTY_ATTR).getNodeValue();
                     String columnRedisName = columnAttrs.getNamedItem(REDIS_NAME).getNodeValue();
-                    mapping.addNameFiled(columnName,columnRedisName);
+                    mapping.addNameField(columnName,columnRedisName);
                 }
                 mapping.build();
                 result.put(fullQualifiedName,mapping);
@@ -211,13 +226,13 @@ public class ConfigurationXMLParser {
                     if(!field.isAnnotationPresent(Column.class)) {
                         throw new RedisormException("field must have @Column Annotation!");
                     }
-                    mapping.addNameFiled(field.getName(),field.getAnnotation(Column.class).name());
+                    mapping.addNameField(field.getName(),field.getAnnotation(Column.class).name());
                     continue;
                 }
                 if(!field.isAnnotationPresent(Column.class)) {
                     throw new RedisormException("field must have @Column Annotation!");
                 }
-                mapping.addNameFiled(field.getName(),field.getAnnotation(Column.class).name());
+                mapping.addNameField(field.getName(),field.getAnnotation(Column.class).name());
             }
             mapping.build();
             result.put(className,mapping);

@@ -1,4 +1,9 @@
-<!ELEMENT redisorm-configuration (session-factory)>
+
+
+<!DOCTYPE configuration PUBLIC "-//redisorm.org//DTD Config 3.0//EN" "http://redisorm.org/dtd/redisorm-configure.dtd">
+
+
+        <!ELEMENT redisorm-configuration (session-factory)>
 
 <!ELEMENT session-factory (properties+,mappings*)>
 <!ELEMENT properties (property+)>

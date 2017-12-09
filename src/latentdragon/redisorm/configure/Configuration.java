@@ -11,6 +11,8 @@ import java.util.Map;
 public class Configuration {
     private static final String DEFAULT_CONFIGURATION_FILE="redisorm.cfg.xml";
 
+    private Configuration(){};
+
     private String host = null;
     private int port = 6379;
     private String username = null;
@@ -39,7 +41,8 @@ public class Configuration {
     }
 
     public static Configuration configure(String filePath) {
-        return ConfigurationXMLParser.parseXMLConfiguration(filePath);
+        Configuration configuration = new Configuration();
+        return ConfigurationXMLParser.parseXMLConfiguration(filePath,configuration);
     }
 
     public static Configuration configure() {

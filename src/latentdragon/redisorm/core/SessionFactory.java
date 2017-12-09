@@ -12,9 +12,13 @@ import redis.clients.jedis.JedisPool;
 public class SessionFactory {
 
     private Configuration configuration;
-    private static SessionFactory sessionFactory = new SessionFactory();
+    private static SessionFactory sessionFactory;
 
     private static JedisPool pool;
+
+    private SessionFactory(Configuration configuration){
+        this.configuration = configuration;
+    }
 
     public static void closeJedis(Jedis jedis) {
         if (jedis != null) {
@@ -50,8 +54,14 @@ public class SessionFactory {
     }
 
     public static SessionFactory buildSessionFactory(Configuration configuration) {
-        sessionFactory.configuration = configuration;
-        pool = getPool(configuration);
+        if(sessionFactory==null) {
+            synchronized (SessionFactory.class) {
+                if(sessionFactory==null) {
+                    sessionFactory = new SessionFactory(configuration);
+                    pool = getPool(configuration);
+                }
+            }
+        }
 
         return sessionFactory;
     }

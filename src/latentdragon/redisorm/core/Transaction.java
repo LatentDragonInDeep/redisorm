@@ -10,6 +10,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Transaction {
     private Session session;
 
+    public Transaction(Session session) {
+        this.session = session;
+    }
+
     private Queue<Operation> operationQueue = new LinkedBlockingQueue<>();
 
     public void addOperation(Operation operation) {

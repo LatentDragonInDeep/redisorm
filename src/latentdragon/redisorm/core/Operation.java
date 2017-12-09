@@ -64,7 +64,8 @@ public class Operation {
         Field[] fields = clazz.getDeclaredFields();
         String idName = mapping.getIdName();
         try {
-            middleState.key = clazz.getField(idName).get(o).toString();
+            Method idMethod = clazz.getDeclaredMethod(GET+firstAlphaToUpperCase(idName));
+            middleState.key = idMethod.invoke(o).toString();
             for (Field field : fields) {
                 field.setAccessible(true);
                 String fieldName = field.getName();
@@ -76,8 +77,7 @@ public class Operation {
                 Method method = clazz.getDeclaredMethod(methodName);
                 map.put(columnName,method.invoke(o).toString());
             }
-        }
-        catch (NoSuchFieldException e) {
+            middleState.map = map;
         }
         catch (IllegalAccessException e) {
 
@@ -99,30 +99,30 @@ public class Operation {
             for (Map.Entry<String,String> entry:map.entrySet()) {
                 String columnName = entry.getKey();
                 String value = entry.getValue();
-                String fieldName = mapping.getNameFiled(columnName);
-                Field field = clazz.getField(fieldName);
+                String fieldName = mapping.getNameField(columnName);
+                Field field = clazz.getDeclaredField(fieldName);
                 field.setAccessible(true);
                 String fieldType = field.getType().getName();
-                String methodName = SET+fieldName;
-                Method method = clazz.getDeclaredMethod(methodName);
+                String methodName = SET+firstAlphaToUpperCase(fieldName);
+                Method method = clazz.getDeclaredMethod(methodName,field.getType());
                 switch (fieldType) {
-                    case "java.lang.Integer":
+                    case "int":
                         method.invoke(o,Integer.parseInt(value));
                         break;
-                    case "java.lang.Long":
+                    case "long":
                         method.invoke(o,Long.parseLong(value));
                         break;
-                    case "java.lang.Float":
+                    case "float":
                         method.invoke(o,Float.parseFloat(value));
                         break;
-                    case "java.lang.Double":
+                    case "double":
                         method.invoke(o,Double.parseDouble(value));
                         break;
                     case "java.lang.String":
                         method.invoke(o,value);
                         break;
                     case "java.util.Date":
-                        method.invoke(o,Date.parse(value));
+                        method.invoke(o,new Date(Date.parse(value)));
                         break;
                     default:
                         throw new RedisormException("Invalid data type!");
@@ -144,7 +144,7 @@ public class Operation {
             e.printStackTrace();
         }
         catch (NoSuchMethodException e) {
-            throw new RedisormException(e.getMessage()+"the field must have getter");
+            throw new RedisormException(e.getMessage()+"the field must have setter");
         }
         catch (InvocationTargetException e) {
             e.printStackTrace();
